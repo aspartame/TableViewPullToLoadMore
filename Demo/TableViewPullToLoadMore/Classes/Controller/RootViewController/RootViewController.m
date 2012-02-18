@@ -25,87 +25,44 @@
 //
 
 #import "RootViewController.h"
-#import "EGORefreshTableHeaderView.h"
-#import "EGORefreshTableFooterView.h"
+#import "PullToLoadMoreView.h"
 
-@interface RootViewController (Private)
+@interface RootViewController ()
+{
+    BOOL _loadingInProgress;
+}
 
-- (void)dataSourceDidFinishLoadingNewData;
-- (float)tableViewHeight;
-- (void)repositionRefreshHeaderView;
-- (float)endOfTableView:(UIScrollView *)scrollView;
+- (void) setupLoadMoreFooterView;
+- (void) dataSourceDidFinishLoadingNewData;
+- (void) loadMoreSampleData;
+- (void) repositionLoadMoreFooterView;
+- (void) freeUp;
+- (CGFloat) tableViewContentHeight;
+- (CGFloat) endOfTableView:(UIScrollView *)scrollView;
 
 @end
 
 
 @implementation RootViewController
 
-@synthesize reloading=_reloading;
-
-
-- (void)viewDidLoad {
+- (void) viewDidLoad {
     [super viewDidLoad];
     
-    _sampleData = [[NSMutableArray alloc] initWithObjects:@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9",@"10",nil];
+    _sampleDataSource = [[NSMutableArray alloc] initWithObjects:@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9",@"10",nil];
     [self.tableView reloadData];
-	if (refreshHeaderView == nil) {
-		refreshHeaderView = [[EGORefreshTableHeaderView alloc] initWithFrame:CGRectMake(0.0f, 0.0f - self.tableView.bounds.size.height, 320.0f, self.tableView.bounds.size.height)];
-		refreshHeaderView.backgroundColor = [UIColor colorWithRed:226.0/255.0 green:231.0/255.0 blue:237.0/255.0 alpha:1.0];
-		[self.tableView addSubview:refreshHeaderView];
-		self.tableView.showsVerticalScrollIndicator = YES;
-		[refreshHeaderView release];
-	}
-    
-    if (refreshFooterView == nil) {
-        refreshFooterView = [[EGORefreshTableFooterView alloc] initWithFrame:CGRectMake(0.0f, [self tableViewHeight], 320.0f, 600.0f)];
-		refreshFooterView.backgroundColor = [UIColor colorWithRed:226.0/255.0 green:231.0/255.0 blue:237.0/255.0 alpha:1.0];
-		[self.tableView addSubview:refreshFooterView];
-		self.tableView.showsVerticalScrollIndicator = YES;
-		[refreshFooterView release];
+
+    if (_loadMoreFooterView == nil) {
+        [self setupLoadMoreFooterView];
     }
 }
 
-
-/*
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-}
-*/
-/*
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-}
-*/
-/*
-- (void)viewWillDisappear:(BOOL)animated {
-	[super viewWillDisappear:animated];
-}
-*/
-/*
-- (void)viewDidDisappear:(BOOL)animated {
-	[super viewDidDisappear:animated];
-}
-*/
-
-
- // Override to allow orientations other than the default portrait orientation.
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-	// Return YES for supported orientations.
-	return YES;
-}
- 
-
-- (void)didReceiveMemoryWarning {
-	// Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-	
-	// Release any cached data, images, etc that aren't in use.
+    return YES;
 }
 
 - (void)viewDidUnload {
-	refreshHeaderView=nil;
+	[self freeUp];
 }
-
 
 #pragma mark Table view methods
 
@@ -116,7 +73,7 @@
 
 // Customize the number of rows in the table view.
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return _sampleData.count;
+    return _sampleDataSource.count;
 }
 
 
@@ -126,12 +83,13 @@
     static NSString *CellIdentifier = @"Cell";
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
     if (cell == nil) {
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
     }
     
-	// Configure the cell.
-    cell.textLabel.text = [_sampleData objectAtIndex:indexPath.row];
+    cell.textLabel.text = [_sampleDataSource objectAtIndex:indexPath.row];
+    
     return cell;
 }
 
@@ -147,135 +105,122 @@
 	[self dataSourceDidFinishLoadingNewData];
 }
 
-
-/*
-// Override to support row selection in the table view.
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-
-    // Navigation logic may go here -- for example, create and push another view controller.
-	// AnotherViewController *anotherViewController = [[AnotherViewController alloc] initWithNibName:@"AnotherView" bundle:nil];
-	// [self.navigationController pushViewController:anotherViewController animated:YES];
-	// [anotherViewController release];
-}
-*/
-
-
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    return YES;
-}
-
-
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+- (void) scrollViewDidScroll:(UIScrollView *)scrollView
+{
+	if ([_loadMoreFooterView isHidden]) {
+        return;
+    }
     
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source.
-        [_sampleData removeObjectAtIndex:indexPath.row];
-        [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
-        [self repositionRefreshHeaderView];
-    }   
-    //else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
-    //}   
-}
-
-
-/*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-}
-*/
-
-
-/*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
-
-
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView{	
-	
 	if (scrollView.isDragging) {
-		if (refreshHeaderView.state == EGOOPullRefreshPulling && scrollView.contentOffset.y > -65.0f && scrollView.contentOffset.y < 0.0f && !_reloading) {
-			[refreshHeaderView setState:EGOOPullRefreshNormal];
-		} else if (refreshHeaderView.state == EGOOPullRefreshNormal && scrollView.contentOffset.y < -65.0f && !_reloading) {
-			[refreshHeaderView setState:EGOOPullRefreshPulling];
-		}
+        CGFloat endOfTable = [self endOfTableView:scrollView];
         
-        float endOfTable = [self endOfTableView:scrollView];
-        if (refreshFooterView.state == EGOOPullRefreshPulling && endOfTable < 0.0f && endOfTable > -65.0f && !_reloading) {
-			[refreshFooterView setState:EGOOPullRefreshNormal];
-		} else if (refreshFooterView.state == EGOOPullRefreshNormal && endOfTable < -65.0f && !_reloading) {
-			[refreshFooterView setState:EGOOPullRefreshPulling];
+        if (_loadMoreFooterView.state == PullRefreshPulling && endOfTable < 0.0f && endOfTable > -60.0f && !_loadingInProgress) {
+			[_loadMoreFooterView setState:PullRefreshNormal];
+            
+		} else if (_loadMoreFooterView.state == PullRefreshNormal && endOfTable < -60.0f && !_loadingInProgress) {
+			[_loadMoreFooterView setState:PullRefreshPulling];
 		}
-	}
+	}       
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
 	
-	if (scrollView.contentOffset.y <= - 65.0f && !_reloading) {
-        _reloading = YES;
-        [self reloadTableViewDataSource];
-        [refreshHeaderView setState:EGOOPullRefreshLoading];
-        [UIView beginAnimations:nil context:NULL];
-        [UIView setAnimationDuration:0.2];
-        self.tableView.contentInset = UIEdgeInsetsMake(60.0f, 0.0f, 0.0f, 0.0f);
-        [UIView commitAnimations];
-	}
+	if ([_loadMoreFooterView isHidden]) {
+        return;
+    }
     
-    if ([self endOfTableView:scrollView] <= -65.0f && !_reloading) {
-        _reloading = YES;
-        [self reloadTableViewDataSource];
-        [refreshFooterView setState:EGOOPullRefreshLoading];
+    if ([self endOfTableView:scrollView] <= -60.0f && !_loadingInProgress) {
+        _loadingInProgress = YES;
+        
+        // For demo purposes
+        [self performSelector:@selector(loadMoreSampleData) withObject:nil afterDelay:3.0];
+        
+        [_loadMoreFooterView setState:PullRefreshLoading];
+        
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationDuration:0.2];
-        self.tableView.contentInset = UIEdgeInsetsMake(0.0f, 0.0f, 60.0f, 0.0f);
+        self.tableView.contentInset = UIEdgeInsetsMake(0.0f, 0.0f, 55.0f, 0.0f);
         [UIView commitAnimations];
 	}
 }
 
-- (void)dataSourceDidFinishLoadingNewData{
-	
-	_reloading = NO;
+- (void) setupLoadMoreFooterView
+{
+    CGFloat xCoord = 0.0f;
+    CGFloat yCoord = [self tableViewContentHeight];
+    CGFloat width = self.view.frame.size.width;
+    CGFloat height = 600.0f;
+    
+    _loadMoreFooterView = [[[PullToLoadMoreView alloc] initWithFrame:CGRectMake(xCoord, yCoord, width, height)] autorelease];
+    _loadMoreFooterView.backgroundColor = [UIColor clearColor];
+    
+    [self.tableView addSubview:_loadMoreFooterView];
+}
+
+- (void) loadMoreSampleData
+{
+    // Cancel loading footer
+    [self performSelector:@selector(dataSourceDidFinishLoadingNewData) withObject:nil];
+    
+    // Add five more sample rows
+    int next = _sampleDataSource.count + 1;
+    
+    NSString* first = [NSString stringWithFormat:@"%d", next++];
+    NSString* second = [NSString stringWithFormat:@"%d", next++];
+    NSString* third = [NSString stringWithFormat:@"%d", next++];
+    NSString* fourth = [NSString stringWithFormat:@"%d", next++];
+    NSString* fifth = [NSString stringWithFormat:@"%d", next];
+    
+    NSArray* moreData = [NSArray arrayWithObjects:first, second, third, fourth, fifth, nil];
+    [_sampleDataSource addObjectsFromArray:moreData];
+    
+    // Reload table view data and update position of footer
+    [self.tableView reloadData];
+    [self repositionLoadMoreFooterView];
+    
+    [self.tableView setContentOffset:CGPointMake(self.tableView.contentOffset.x, self.tableView.contentOffset.y + 55.0f)];
+}
+
+- (void) dataSourceDidFinishLoadingNewData 
+{	
+	_loadingInProgress = NO;
 	
 	[UIView beginAnimations:nil context:NULL];
 	[UIView setAnimationDuration:.3];
 	[self.tableView setContentInset:UIEdgeInsetsMake(0.0f, 0.0f, 0.0f, 0.0f)];
 	[UIView commitAnimations];
-	
-    if ([refreshHeaderView state] != EGOOPullRefreshNormal) {
-        [refreshHeaderView setState:EGOOPullRefreshNormal];
-        [refreshHeaderView setCurrentDate];  //  should check if data reload was successful 
-    }
-    
-    if ([refreshFooterView state] != EGOOPullRefreshNormal) {
-        [refreshFooterView setState:EGOOPullRefreshNormal];
-        [refreshFooterView setCurrentDate];  //  should check if data reload was successful 
+
+    if ([_loadMoreFooterView state] != PullRefreshNormal) {
+        [_loadMoreFooterView setState:PullRefreshNormal];
     }
 }
 
-- (float)tableViewHeight {
-	
-    // return height of table view
-    return [self.tableView contentSize].height;
+- (float)tableViewContentHeight {
+    return self.tableView.contentSize.height;
 }
 
-- (void)repositionRefreshHeaderView {
-    refreshFooterView.center = CGPointMake(160.0f, [self tableViewHeight] + 300.0f);
+- (void) repositionLoadMoreFooterView {
+    _loadMoreFooterView.center = CGPointMake(self.view.frame.size.width / 2, 
+                                            [self tableViewContentHeight] + _loadMoreFooterView.frame.size.height / 2);
+
 }
 
 - (float)endOfTableView:(UIScrollView *)scrollView {
-    return [self tableViewHeight] - scrollView.bounds.size.height - scrollView.bounds.origin.y;
+    return [self tableViewContentHeight] - scrollView.bounds.size.height - scrollView.bounds.origin.y;
 }
 
 #pragma mark -
 #pragma mark Dealloc
 
-- (void)dealloc {
-	refreshHeaderView = nil;
-    [_sampleData release];
+- (void) freeUp
+{
+    _loadMoreFooterView = nil;
+    [_loadMoreFooterView release];
+}
+
+- (void)dealloc 
+{
+    [self freeUp];
     [super dealloc];
 }
 

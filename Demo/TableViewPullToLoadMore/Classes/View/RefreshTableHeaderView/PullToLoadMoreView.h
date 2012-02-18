@@ -27,27 +27,31 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
+#define RGB(r, g, b)                [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b/255.0 alpha:1.0]
+#define PTLMTextColor               RGB(72, 76, 79)
+#define PTLMShadowColor             [UIColor whiteColor]
+#define PTLMShadowOffset            CGSizeMake(0.0, 1.0)
+#define PTLMFontSize                15.0
+#define FLIP_ANIMATION_DURATION     0.18f
 
-typedef enum{
-	EGOOPullRefreshPulling = 0,
-	EGOOPullRefreshNormal,
-	EGOOPullRefreshLoading,	
-} EGOPullRefreshState;
+typedef enum {
+	PullRefreshPulling = 0,
+	PullRefreshNormal,
+	PullRefreshLoading,	
+} PullRefreshState;
 
-@interface EGORefreshTableHeaderView : UIView {
-	
-	UILabel *_lastUpdatedLabel;
+@interface PullToLoadMoreView : UIView 
+{
 	UILabel *_statusLabel;
 	CALayer *_arrowImage;
 	UIActivityIndicatorView *_activityView;
 	
-	EGOPullRefreshState _state;
-
+	PullRefreshState _state;
+    
 @protected
-    CGRect _lastUpdatedLabelFrame;
     CGRect _statusLabelFrame;
     CGRect _arrowImageFrame;
-    CGRect _activityViewFrame;
+    CGRect _waitIndicatorFrame;
     
     CATransform3D _arrowPullingTransform;
     CATransform3D _arrowNormalTransform;
@@ -55,17 +59,13 @@ typedef enum{
     NSString *_releaseLabelText;
     NSString *_pullingLabelText;
     NSString *_loadingLabelText;
-    
-    NSString *_userDefaultsKey;
 }
 
-@property(nonatomic,assign) EGOPullRefreshState state;
+@property(nonatomic,assign) PullRefreshState state;
 @property(nonatomic,retain) NSString *releaseLabelText;
 @property(nonatomic,retain) NSString *pullingLabelText;
 @property(nonatomic,retain) NSString *loadingLabelText;
 
-- (void)setCurrentDate;
-- (void)setState:(EGOPullRefreshState)aState;
-- (void)setup:(CGRect)frame;
+- (void)setState:(PullRefreshState)aState;
 
 @end

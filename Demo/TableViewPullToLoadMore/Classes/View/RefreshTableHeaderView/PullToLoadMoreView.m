@@ -2,7 +2,7 @@
 //  EGORefreshTableHeaderView.m
 //  Demo
 //
-//  Created by Devin Doty on 10/14/09October14.
+//  Created by Devin Doty on 10/14/09.
 //  Copyright 2009 enormego. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,110 +24,96 @@
 //  THE SOFTWARE.
 //
 
-#import "EGORefreshTableHeaderView.h"
+#import "PullToLoadMoreView.h"
 
+@implementation PullToLoadMoreView
 
-#define TEXT_COLOR	 [UIColor colorWithRed:87.0/255.0 green:108.0/255.0 blue:137.0/255.0 alpha:1.0]
-#define BORDER_COLOR [UIColor colorWithRed:87.0/255.0 green:108.0/255.0 blue:137.0/255.0 alpha:1.0]
-#define FLIP_ANIMATION_DURATION 0.18f
-
-@implementation EGORefreshTableHeaderView
-
-@synthesize state=_state;
-@synthesize releaseLabelText=_releaseLabelText;
-@synthesize pullingLabelText=_pullingLabelText;
-@synthesize loadingLabelText=_loadingLabelText;
+@synthesize state = _state;
+@synthesize releaseLabelText = _releaseLabelText;
+@synthesize pullingLabelText = _pullingLabelText;
+@synthesize loadingLabelText = _loadingLabelText;
 
 - (id)initWithFrame:(CGRect)frame {
-    if ((self = [super initWithFrame:frame])) {
-		
-        [self setup:frame];
+    self = [super initWithFrame:frame];
+    
+    if (self) {		
+        _statusLabelFrame      = CGRectMake(0.0f, 5.0f, self.frame.size.width, 40.0f);
+        _arrowImageFrame       = CGRectMake(35.0f, 5.0f, 30.0f, 40.0f);
+        _waitIndicatorFrame     = CGRectMake(35.0f, 16.0f, 20.0f, 20.0f);
+        
+        _arrowPullingTransform = CATransform3DMakeRotation((M_PI / 180.0f) * -360.0f, 0.0f, 0.0f, 1.0f);
+        _arrowNormalTransform  = CATransform3DMakeRotation((M_PI / 180.0f) *  180.0f, 0.0f, 0.0f, 1.0f);
+        
+        _releaseLabelText = NSLocalizedString(@"Release to load more...", @"Release to load more");
+        _pullingLabelText = NSLocalizedString(@"Pull up to load more...", @"Pull up to load more");
+        _loadingLabelText = NSLocalizedString(@"Loading more...", @"Loading Status");
+        
+        //_userDefaultsKey = @"RefreshTableFooterView_LastRefresh";
         
 		self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-	
-		UILabel *label = [[UILabel alloc] initWithFrame:_lastUpdatedLabelFrame];
+        
+        // Init status text label
+		UILabel* label = [[[UILabel alloc] initWithFrame:_statusLabelFrame] autorelease];
+        
 		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		label.font = [UIFont systemFontOfSize:12.0f];
-		label.textColor = TEXT_COLOR;
-		label.shadowColor = [UIColor colorWithWhite:0.9f alpha:1.0f];
-		label.shadowOffset = CGSizeMake(0.0f, 1.0f);
+		label.font = [UIFont boldSystemFontOfSize:PTLMFontSize];
+		label.textColor = PTLMTextColor;
+		label.shadowColor = PTLMShadowColor;
+		label.shadowOffset = PTLMShadowOffset;
 		label.backgroundColor = [UIColor clearColor];
 		label.textAlignment = UITextAlignmentCenter;
-		[self addSubview:label];
-		_lastUpdatedLabel=label;
-		[label release];
-
-		if ([[NSUserDefaults standardUserDefaults] objectForKey:_userDefaultsKey]) {
-			_lastUpdatedLabel.text = [[NSUserDefaults standardUserDefaults] objectForKey:_userDefaultsKey];
-		} else {
-			[self setCurrentDate];
-		}
+        
+		_statusLabel = label;
+        [self addSubview:_statusLabel];
 		
-		label = [[UILabel alloc] initWithFrame:_statusLabelFrame];
-		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		label.font = [UIFont boldSystemFontOfSize:13.0f];
-		label.textColor = TEXT_COLOR;
-		label.shadowColor = [UIColor colorWithWhite:0.9f alpha:1.0f];
-		label.shadowOffset = CGSizeMake(0.0f, 1.0f);
-		label.backgroundColor = [UIColor clearColor];
-		label.textAlignment = UITextAlignmentCenter;
-		[self addSubview:label];
-		_statusLabel=label;
-		[label release];
-		
-		CALayer *layer = [[CALayer alloc] init];
+        // Add arrow as layer
+		CALayer *layer = [[[CALayer alloc] init] autorelease];
+        
 		layer.frame = _arrowImageFrame;
 		layer.contentsGravity = kCAGravityResizeAspect;
-		layer.contents = (id)[UIImage imageNamed:@"blueArrow.png"].CGImage;
+		layer.contents = (id)[UIImage imageNamed:@"grayArrow.png"].CGImage;
 		
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 40000
 		if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
 			layer.contentsScale = [[UIScreen mainScreen] scale];
 		}
-#endif
+        
+		_arrowImage = layer;
+        [[self layer] addSublayer:_arrowImage];
 		
-		[[self layer] addSublayer:layer];
-		_arrowImage=layer;
-		[layer release];
-		
-		UIActivityIndicatorView *view = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
-		view.frame = _activityViewFrame;
+        // Add loading indicator
+		UIActivityIndicatorView* view = 
+        [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray] autorelease];
+        
+		view.frame = _waitIndicatorFrame;
+        
+        _activityView = view;
 		[self addSubview:view];
-		_activityView = view;
-		[view release];
 		
-		[self setState:EGOOPullRefreshNormal];
-		
+        // Set initial state to normal
+		[self setState:PullRefreshNormal];
     }
+    
     return self;
 }
 
-- (void)setCurrentDate {
-	NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-	[formatter setAMSymbol:@"AM"];
-	[formatter setPMSymbol:@"PM"];
-	[formatter setDateFormat:@"MM/dd/yyyy hh:mm a"];
-	_lastUpdatedLabel.text = [NSString stringWithFormat:@"Last Updated: %@", [formatter stringFromDate:[NSDate date]]];
-	[[NSUserDefaults standardUserDefaults] setObject:_lastUpdatedLabel.text forKey:_userDefaultsKey];
-	[[NSUserDefaults standardUserDefaults] synchronize];
-	[formatter release];
-}
-
-- (void)setState:(EGOPullRefreshState)aState{
+- (void) setState:(PullRefreshState) aState
+{
 	
 	switch (aState) {
-		case EGOOPullRefreshPulling:
+		case PullRefreshPulling:
 			
 			_statusLabel.text = _releaseLabelText;
+            
 			[CATransaction begin];
 			[CATransaction setAnimationDuration:FLIP_ANIMATION_DURATION];
 			_arrowImage.transform = _arrowPullingTransform;
 			[CATransaction commit];
 			
 			break;
-		case EGOOPullRefreshNormal:
+            
+		case PullRefreshNormal:
 			
-			if (_state == EGOOPullRefreshPulling) {
+			if (_state == PullRefreshPulling) {
 				[CATransaction begin];
 				[CATransaction setAnimationDuration:FLIP_ANIMATION_DURATION];
 				_arrowImage.transform = CATransform3DIdentity;
@@ -136,6 +122,7 @@
 			
 			_statusLabel.text = _pullingLabelText;
 			[_activityView stopAnimating];
+            
 			[CATransaction begin];
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
 			_arrowImage.hidden = NO;
@@ -143,10 +130,12 @@
 			[CATransaction commit];
 			
 			break;
-		case EGOOPullRefreshLoading:
+            
+		case PullRefreshLoading:
 			
 			_statusLabel.text = _loadingLabelText;
 			[_activityView startAnimating];
+            
 			[CATransaction begin];
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
 			_arrowImage.hidden = YES;
@@ -160,27 +149,12 @@
 	_state = aState;
 }
 
-- (void)setup:(CGRect)frame {
-    _lastUpdatedLabelFrame = CGRectMake(0.0f, frame.size.height - 30.0f, self.frame.size.width, 20.0f);
-    _statusLabelFrame      = CGRectMake(0.0f, frame.size.height - 48.0f, self.frame.size.width, 20.0f);
-    _arrowImageFrame       = CGRectMake(25.0f, frame.size.height - 65.0f, 30.0f, 55.0f);
-    _activityViewFrame     = CGRectMake(25.0f, frame.size.height - 38.0f, 20.0f, 20.0f);
-    
-    _arrowPullingTransform = CATransform3DMakeRotation((M_PI / 180.0) * 180.0f, 0.0f, 0.0f, 1.0f);
-    _arrowNormalTransform  = CATransform3DIdentity;
-    
-    _releaseLabelText = NSLocalizedString(@"Release to refresh...", @"Release to refresh status");
-    _pullingLabelText = NSLocalizedString(@"Pull down to refresh...", @"Pull down to refresh status");
-    _loadingLabelText = NSLocalizedString(@"Loading...", @"Loading Status");
-    
-    _userDefaultsKey = @"EGORefreshTableHeaderView_LastRefresh";
-}
-
-- (void)dealloc {
+- (void) dealloc 
+{
 	_activityView = nil;
 	_statusLabel = nil;
 	_arrowImage = nil;
-	_lastUpdatedLabel = nil;
+    
     [super dealloc];
 }
 

@@ -24,23 +24,13 @@
 //  THE SOFTWARE.
 //
 
-@class EGORefreshTableHeaderView;
-@class EGORefreshTableFooterView;
+#import "PullToLoadMoreView.h"
+
 @interface RootViewController : UITableViewController  <UITableViewDelegate, UITableViewDataSource>{
-	EGORefreshTableHeaderView *refreshHeaderView;
-    EGORefreshTableFooterView *refreshFooterView;
-	
-	//  Reloading should really be your tableviews model class
-	//  Putting it here for demo purposes 
-	BOOL _reloadingHeader;
-    BOOL _reloadingFooter;
-    
+	PullToLoadMoreView* _loadMoreFooterView;
+
     //  Sample data - do not include in your project
-    NSMutableArray *_sampleData;
+    NSMutableArray *_sampleDataSource;
 }
 
-@property(assign,getter=isReloading) BOOL reloading;
-
-- (void)reloadTableViewDataSource;
-- (void)doneLoadingTableViewData;
 @end

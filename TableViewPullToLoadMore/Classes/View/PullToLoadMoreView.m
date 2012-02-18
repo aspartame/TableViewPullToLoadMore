@@ -39,7 +39,7 @@
     if (self) {		
         _statusLabelFrame      = CGRectMake(0.0f, 5.0f, self.frame.size.width, 40.0f);
         _arrowImageFrame       = CGRectMake(35.0f, 5.0f, 30.0f, 40.0f);
-        _waitIndicatorFrame     = CGRectMake(35.0f, 16.0f, 20.0f, 20.0f);
+        _waitIndicatorFrame     = CGRectMake(40.0f, 16.0f, 20.0f, 20.0f);
         
         _arrowPullingTransform = CATransform3DMakeRotation((M_PI / 180.0f) * -360.0f, 0.0f, 0.0f, 1.0f);
         _arrowNormalTransform  = CATransform3DMakeRotation((M_PI / 180.0f) *  180.0f, 0.0f, 0.0f, 1.0f);

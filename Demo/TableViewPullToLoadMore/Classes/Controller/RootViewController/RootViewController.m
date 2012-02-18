@@ -42,10 +42,12 @@
 
 @end
 
-
 @implementation RootViewController
 
-- (void) viewDidLoad {
+#pragma mark - View life cycle
+
+- (void) viewDidLoad 
+{
     [super viewDidLoad];
     
     _sampleDataSource = [[NSMutableArray alloc] initWithObjects:@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9",@"10",nil];
@@ -56,29 +58,30 @@
     }
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation 
+{
     return YES;
 }
 
-- (void)viewDidUnload {
+- (void) viewDidUnload 
+{
 	[self freeUp];
 }
 
-#pragma mark Table view methods
+#pragma mark UITableView methods
 
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+- (NSInteger) numberOfSectionsInTableView:(UITableView *)tableView 
+{
     return 1;
 }
 
-
-// Customize the number of rows in the table view.
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section 
+{
     return _sampleDataSource.count;
 }
 
-
-// Customize the appearance of table view cells.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath 
+{
     
     static NSString *CellIdentifier = @"Cell";
     
@@ -93,24 +96,10 @@
     return cell;
 }
 
-- (void)reloadTableViewDataSource{
-	//  should be calling your tableviews model to reload
-	//  put here just for demo
-	[self performSelector:@selector(doneLoadingTableViewData) withObject:nil afterDelay:3.0];
-}
-
-
-- (void)doneLoadingTableViewData{
-	//  model should call this when its done loading
-	[self dataSourceDidFinishLoadingNewData];
-}
+#pragma mark - UIScrollViewDelegate methods
 
 - (void) scrollViewDidScroll:(UIScrollView *)scrollView
 {
-	if ([_loadMoreFooterView isHidden]) {
-        return;
-    }
-    
 	if (scrollView.isDragging) {
         CGFloat endOfTable = [self endOfTableView:scrollView];
         
@@ -123,12 +112,8 @@
 	}       
 }
 
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
-	
-	if ([_loadMoreFooterView isHidden]) {
-        return;
-    }
-    
+- (void) scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate 
+{	
     if ([self endOfTableView:scrollView] <= -60.0f && !_loadingInProgress) {
         _loadingInProgress = YES;
         
@@ -143,6 +128,8 @@
         [UIView commitAnimations];
 	}
 }
+
+#pragma mark - PullToLoadMoreView helper methods
 
 - (void) setupLoadMoreFooterView
 {
@@ -178,6 +165,9 @@
     [self.tableView reloadData];
     [self repositionLoadMoreFooterView];
     
+    // Scroll down as much as the inset of the loading footer.
+    // This keeps the table view from snapping back when loading is done and reveals 
+    // part of the newly loaded data.
     [self.tableView setContentOffset:CGPointMake(self.tableView.contentOffset.x, self.tableView.contentOffset.y + 55.0f)];
 }
 
@@ -195,35 +185,35 @@
     }
 }
 
-- (float)tableViewContentHeight {
+- (CGFloat) tableViewContentHeight 
+{
     return self.tableView.contentSize.height;
 }
 
-- (void) repositionLoadMoreFooterView {
-    _loadMoreFooterView.center = CGPointMake(self.view.frame.size.width / 2, 
-                                            [self tableViewContentHeight] + _loadMoreFooterView.frame.size.height / 2);
-
-}
-
-- (float)endOfTableView:(UIScrollView *)scrollView {
+- (CGFloat) endOfTableView:(UIScrollView *)scrollView 
+{
     return [self tableViewContentHeight] - scrollView.bounds.size.height - scrollView.bounds.origin.y;
 }
 
-#pragma mark -
-#pragma mark Dealloc
+- (void) repositionLoadMoreFooterView 
+{
+    _loadMoreFooterView.center = CGPointMake(self.view.frame.size.width / 2, 
+                                            [self tableViewContentHeight] + _loadMoreFooterView.frame.size.height / 2);
+}
+
+#pragma mark - Memory management and cleanup
 
 - (void) freeUp
 {
     _loadMoreFooterView = nil;
-    [_loadMoreFooterView release];
+    [_sampleDataSource release];
 }
 
-- (void)dealloc 
+- (void) dealloc 
 {
     [self freeUp];
     [super dealloc];
 }
-
 
 @end
 

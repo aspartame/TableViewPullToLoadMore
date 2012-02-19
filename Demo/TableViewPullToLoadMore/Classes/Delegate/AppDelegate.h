@@ -1,8 +1,9 @@
 //
-//  TableViewPullAppDelegate.h
-//  TableViewPull
+//  AppDelegate.h
 //
-//  Created by Devin Doty on 10/16/09October16.
+//  Originally created by Devin Doty on 16 october 2009.
+//  Forked and customized by Linus Karnland on 18 february 2012
+//
 //  Copyright enormego 2009. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,14 +25,14 @@
 //  THE SOFTWARE.
 //
 
-@interface TableViewPullAppDelegate : NSObject <UIApplicationDelegate> {
-    
-    UIWindow *window;
-    UINavigationController *navigationController;
+@interface AppDelegate : NSObject <UIApplicationDelegate> 
+{
+    UIWindow* _window;
+    UINavigationController* _navigationController;
 }
 
-@property (nonatomic, retain) IBOutlet UIWindow *window;
-@property (nonatomic, retain) IBOutlet UINavigationController *navigationController;
+@property (nonatomic, retain) IBOutlet UIWindow* window;
+@property (nonatomic, retain) IBOutlet UINavigationController* navigationController;
 
 @end
 

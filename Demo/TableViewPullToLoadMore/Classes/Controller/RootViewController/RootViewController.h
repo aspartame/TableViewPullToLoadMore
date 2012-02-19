@@ -1,8 +1,9 @@
 //
 //  RootViewController.h
-//  TableViewPull
 //
-//  Created by Devin Doty on 10/16/09October16.
+//  Originally created by Devin Doty on 16 october 2009.
+//  Forked and customized by Linus Karnland on 18 february 2012
+//
 //  Copyright enormego 2009. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,7 +30,7 @@
 @interface RootViewController : UITableViewController  <UITableViewDelegate, UITableViewDataSource>{
 	PullToLoadMoreView* _loadMoreFooterView;
 
-    //  Sample data - do not include in your project
+    //  Sample data
     NSMutableArray *_sampleDataSource;
 }
 

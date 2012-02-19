@@ -1,9 +1,10 @@
 //
-//  EGORefreshTableHeaderView.h
-//  Demo
+//  PullToLoadMoreView.h
 //
-//  Created by Devin Doty on 10/14/09October14.
-//  Copyright 2009 enormego. All rights reserved.
+//  Originally created by Devin Doty on 16 october 2009.
+//  Forked and customized by Linus Karnland on 18 february 2012
+//
+//  Copyright enormego 2009. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -35,18 +36,18 @@
 #define FLIP_ANIMATION_DURATION     0.18f
 
 typedef enum {
-	PullRefreshPulling = 0,
-	PullRefreshNormal,
-	PullRefreshLoading,	
-} PullRefreshState;
+	StatePulling = 0,
+	StateNormal,
+	StateLoading,	
+} State;
 
 @interface PullToLoadMoreView : UIView 
 {
-	UILabel *_statusLabel;
-	CALayer *_arrowImage;
-	UIActivityIndicatorView *_activityView;
+	UILabel* _statusLabel;
+	CALayer* _arrowImage;
+	UIActivityIndicatorView* _waitIndicatorView;
 	
-	PullRefreshState _state;
+	State _state;
     
 @protected
     CGRect _statusLabelFrame;
@@ -56,16 +57,16 @@ typedef enum {
     CATransform3D _arrowPullingTransform;
     CATransform3D _arrowNormalTransform;
     
-    NSString *_releaseLabelText;
-    NSString *_pullingLabelText;
-    NSString *_loadingLabelText;
+    NSString* _releaseLabelText;
+    NSString* _pullingLabelText;
+    NSString* _loadingLabelText;
 }
 
-@property(nonatomic,assign) PullRefreshState state;
-@property(nonatomic,retain) NSString *releaseLabelText;
-@property(nonatomic,retain) NSString *pullingLabelText;
-@property(nonatomic,retain) NSString *loadingLabelText;
+@property(nonatomic,assign) State state;
+@property(nonatomic,retain) NSString* releaseLabelText;
+@property(nonatomic,retain) NSString* pullingLabelText;
+@property(nonatomic,retain) NSString* loadingLabelText;
 
-- (void)setState:(PullRefreshState)aState;
+- (void) setState:(State)state;
 
 @end

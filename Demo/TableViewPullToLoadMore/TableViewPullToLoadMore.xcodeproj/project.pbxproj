@@ -21,7 +21,7 @@
 		3A2585551088E97000126784 /* blackArrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2585521088E97000126784 /* blackArrow.png */; };
 		3A2585561088E97000126784 /* blueArrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2585531088E97000126784 /* blueArrow.png */; };
 		3A2585571088E97000126784 /* whiteArrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 3A2585541088E97000126784 /* whiteArrow.png */; };
-		3A3D908E11187FE7002B6585 /* TableViewPullAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A3D908D11187FE7002B6585 /* TableViewPullAppDelegate.m */; };
+		3A3D908E11187FE7002B6585 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A3D908D11187FE7002B6585 /* AppDelegate.m */; };
 		3A3D909E11188064002B6585 /* PullToLoadMoreView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A3D909D11188064002B6585 /* PullToLoadMoreView.m */; };
 		3A3D90A8111881DE002B6585 /* RootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A3D90A7111881DE002B6585 /* RootViewController.m */; };
 		3A3D910311188495002B6585 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A3D910211188495002B6585 /* main.m */; };
@@ -43,8 +43,8 @@
 		3A2585521088E97000126784 /* blackArrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blackArrow.png; sourceTree = "<group>"; };
 		3A2585531088E97000126784 /* blueArrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueArrow.png; sourceTree = "<group>"; };
 		3A2585541088E97000126784 /* whiteArrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = whiteArrow.png; sourceTree = "<group>"; };
-		3A3D908C11187FE7002B6585 /* TableViewPullAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TableViewPullAppDelegate.h; sourceTree = "<group>"; };
-		3A3D908D11187FE7002B6585 /* TableViewPullAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TableViewPullAppDelegate.m; sourceTree = "<group>"; };
+		3A3D908C11187FE7002B6585 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; path = AppDelegate.h; sourceTree = "<group>"; };
+		3A3D908D11187FE7002B6585 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		3A3D909C11188064002B6585 /* PullToLoadMoreView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PullToLoadMoreView.h; sourceTree = "<group>"; };
 		3A3D909D11188064002B6585 /* PullToLoadMoreView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PullToLoadMoreView.m; sourceTree = "<group>"; };
 		3A3D90A6111881DE002B6585 /* RootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; };
@@ -140,8 +140,8 @@
 		3A3D908411187FAD002B6585 /* Delegate */ = {
 			isa = PBXGroup;
 			children = (
-				3A3D908C11187FE7002B6585 /* TableViewPullAppDelegate.h */,
-				3A3D908D11187FE7002B6585 /* TableViewPullAppDelegate.m */,
+				3A3D908C11187FE7002B6585 /* AppDelegate.h */,
+				3A3D908D11187FE7002B6585 /* AppDelegate.m */,
 			);
 			path = Delegate;
 			sourceTree = "<group>";
@@ -250,7 +250,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3A3D908E11187FE7002B6585 /* TableViewPullAppDelegate.m in Sources */,
+				3A3D908E11187FE7002B6585 /* AppDelegate.m in Sources */,
 				3A3D909E11188064002B6585 /* PullToLoadMoreView.m in Sources */,
 				3A3D90A8111881DE002B6585 /* RootViewController.m in Sources */,
 				3A3D910311188495002B6585 /* main.m in Sources */,

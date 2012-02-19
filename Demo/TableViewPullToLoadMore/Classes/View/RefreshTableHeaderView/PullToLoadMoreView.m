@@ -1,9 +1,10 @@
 //
-//  EGORefreshTableHeaderView.m
-//  Demo
+//  PullToLoadMoreView.h
 //
-//  Created by Devin Doty on 10/14/09.
-//  Copyright 2009 enormego. All rights reserved.
+//  Originally created by Devin Doty on 16 october 2009.
+//  Forked and customized by Linus Karnland on 18 february 2012
+//
+//  Copyright enormego 2009. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -37,8 +38,8 @@
     self = [super initWithFrame:frame];
     
     if (self) {		
-        _statusLabelFrame      = CGRectMake(0.0f, 5.0f, self.frame.size.width, 40.0f);
-        _arrowImageFrame       = CGRectMake(35.0f, 5.0f, 30.0f, 40.0f);
+        _statusLabelFrame       = CGRectMake(0.0f, 5.0f, self.frame.size.width, 40.0f);
+        _arrowImageFrame        = CGRectMake(35.0f, 5.0f, 30.0f, 40.0f);
         _waitIndicatorFrame     = CGRectMake(40.0f, 16.0f, 20.0f, 20.0f);
         
         _arrowPullingTransform = CATransform3DMakeRotation((M_PI / 180.0f) * -360.0f, 0.0f, 0.0f, 1.0f);
@@ -47,60 +48,54 @@
         _releaseLabelText = NSLocalizedString(@"Release to load more...", @"Release to load more");
         _pullingLabelText = NSLocalizedString(@"Pull up to load more...", @"Pull up to load more");
         _loadingLabelText = NSLocalizedString(@"Loading more...", @"Loading Status");
-        
-        //_userDefaultsKey = @"RefreshTableFooterView_LastRefresh";
-        
+ 
 		self.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         
         // Init status text label
-		UILabel* label = [[[UILabel alloc] initWithFrame:_statusLabelFrame] autorelease];
+		_statusLabel = [[UILabel alloc] initWithFrame:_statusLabelFrame];
         
-		label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		label.font = [UIFont boldSystemFontOfSize:PTLMFontSize];
-		label.textColor = PTLMTextColor;
-		label.shadowColor = PTLMShadowColor;
-		label.shadowOffset = PTLMShadowOffset;
-		label.backgroundColor = [UIColor clearColor];
-		label.textAlignment = UITextAlignmentCenter;
+		_statusLabel.autoresizingMask   = UIViewAutoresizingFlexibleWidth;
+		_statusLabel.font               = [UIFont boldSystemFontOfSize:PTLMFontSize];
+		_statusLabel.textColor          = PTLMTextColor;
+		_statusLabel.shadowColor        = PTLMShadowColor;
+		_statusLabel.shadowOffset       = PTLMShadowOffset;
+		_statusLabel.backgroundColor    = [UIColor clearColor];
+		_statusLabel.textAlignment      = UITextAlignmentCenter;
         
-		_statusLabel = label;
         [self addSubview:_statusLabel];
 		
         // Add arrow as layer
-		CALayer *layer = [[[CALayer alloc] init] autorelease];
+		_arrowImage = [[CALayer alloc] init];
         
-		layer.frame = _arrowImageFrame;
-		layer.contentsGravity = kCAGravityResizeAspect;
-		layer.contents = (id)[UIImage imageNamed:@"grayArrow.png"].CGImage;
+		_arrowImage.frame           = _arrowImageFrame;
+		_arrowImage.contentsGravity = kCAGravityResizeAspect;
+		_arrowImage.contents        = (id) [UIImage imageNamed:@"grayArrow.png"].CGImage;
 		
 		if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
-			layer.contentsScale = [[UIScreen mainScreen] scale];
+			_arrowImage.contentsScale = [[UIScreen mainScreen] scale];
 		}
         
-		_arrowImage = layer;
         [[self layer] addSublayer:_arrowImage];
 		
         // Add loading indicator
-		UIActivityIndicatorView* view = 
-        [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray] autorelease];
+		_waitIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
         
-		view.frame = _waitIndicatorFrame;
+		_waitIndicatorView.frame = _waitIndicatorFrame;
         
-        _activityView = view;
-		[self addSubview:view];
+		[self addSubview:_waitIndicatorView];
 		
         // Set initial state to normal
-		[self setState:PullRefreshNormal];
+		[self setState:StateNormal];
     }
     
     return self;
 }
 
-- (void) setState:(PullRefreshState) aState
+- (void) setState:(State) newState
 {
-	
-	switch (aState) {
-		case PullRefreshPulling:
+	switch (newState) {
+            
+		case StatePulling:
 			
 			_statusLabel.text = _releaseLabelText;
             
@@ -111,9 +106,9 @@
 			
 			break;
             
-		case PullRefreshNormal:
+		case StateNormal:
 			
-			if (_state == PullRefreshPulling) {
+			if (_state == StatePulling) {
 				[CATransaction begin];
 				[CATransaction setAnimationDuration:FLIP_ANIMATION_DURATION];
 				_arrowImage.transform = CATransform3DIdentity;
@@ -121,7 +116,7 @@
 			}
 			
 			_statusLabel.text = _pullingLabelText;
-			[_activityView stopAnimating];
+			[_waitIndicatorView stopAnimating];
             
 			[CATransaction begin];
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
@@ -131,10 +126,10 @@
 			
 			break;
             
-		case PullRefreshLoading:
+		case StateLoading:
 			
 			_statusLabel.text = _loadingLabelText;
-			[_activityView startAnimating];
+			[_waitIndicatorView startAnimating];
             
 			[CATransaction begin];
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
@@ -142,18 +137,27 @@
 			[CATransaction commit];
 			
 			break;
+            
 		default:
 			break;
 	}
 	
-	_state = aState;
+	_state = newState;
 }
 
 - (void) dealloc 
 {
-	_activityView = nil;
-	_statusLabel = nil;
-	_arrowImage = nil;
+	[_waitIndicatorView release];
+	[_statusLabel release];
+	[_arrowImage release];
+    
+    _waitIndicatorView = nil;
+    _statusLabel = nil;
+    _arrowImage = nil;
+    
+    self.releaseLabelText = nil;
+    self.pullingLabelText = nil;
+    self.loadingLabelText = nil;
     
     [super dealloc];
 }

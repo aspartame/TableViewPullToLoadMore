@@ -1,8 +1,9 @@
 //
-//  TableViewPullAppDelegate.m
-//  TableViewPull
+//  AppDelegate.m
 //
-//  Created by Devin Doty on 10/16/09October16.
+//  Originally created by Devin Doty on 16 october 2009.
+//  Forked and customized by Linus Karnland on 18 february 2012
+//
 //  Copyright enormego 2009. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,42 +25,26 @@
 //  THE SOFTWARE.
 //
 
-#import "TableViewPullAppDelegate.h"
+#import "AppDelegate.h"
 #import "RootViewController.h"
 
+@implementation AppDelegate
 
-@implementation TableViewPullAppDelegate
+@synthesize window = _window;
+@synthesize navigationController = _navigationController;
 
-@synthesize window;
-@synthesize navigationController;
-
-
-#pragma mark -
-#pragma mark Application lifecycle
-
-- (void)applicationDidFinishLaunching:(UIApplication *)application {    
-    
-    // Override point for customization after app launch    
-	
-	[window addSubview:[navigationController view]];
-    [window makeKeyAndVisible];
+- (void) applicationDidFinishLaunching:(UIApplication *)application 
+{    
+	[self.window addSubview:self.navigationController.view];
+    [self.window makeKeyAndVisible];
 }
-
-
-- (void)applicationWillTerminate:(UIApplication *)application {
-	// Save data if appropriate
-}
-
-
-#pragma mark -
-#pragma mark Memory management
 
 - (void)dealloc {
-	[navigationController release];
-	[window release];
+	self.navigationController = nil;
+    self.window = nil;
+    
 	[super dealloc];
 }
-
 
 @end
 

@@ -1,8 +1,9 @@
 //
 //  RootViewController.m
-//  TableViewPull
 //
-//  Created by Devin Doty on 10/16/09October16.
+//  Originally created by Devin Doty on 16 october 2009.
+//  Forked and customized by Linus Karnland on 18 february 2012
+//
 //  Copyright enormego 2009. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,7 +34,7 @@
 }
 
 - (void) setupLoadMoreFooterView;
-- (void) dataSourceDidFinishLoadingNewData;
+- (void) didFinishLoadingMoreSampleData;
 - (void) loadMoreSampleData;
 - (void) repositionLoadMoreFooterView;
 - (void) freeUp;
@@ -50,7 +51,7 @@
 {
     [super viewDidLoad];
     
-    _sampleDataSource = [[NSMutableArray alloc] initWithObjects:@"1",@"2",@"3",@"4",@"5",@"6",@"7",@"8",@"9",@"10",nil];
+    _sampleDataSource = [[NSMutableArray alloc] initWithObjects:@"1", @"2", @"3", @"4", @"5", @"6", @"7", @"8", @"9", @"10", nil];
     [self.tableView reloadData];
 
     if (_loadMoreFooterView == nil) {
@@ -82,13 +83,12 @@
 
 - (UITableViewCell *) tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath 
 {
+    static NSString* cellIdentifier = @"Cell";
     
-    static NSString *CellIdentifier = @"Cell";
-    
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    UITableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier] autorelease];
     }
     
     cell.textLabel.text = [_sampleDataSource objectAtIndex:indexPath.row];
@@ -103,11 +103,11 @@
 	if (scrollView.isDragging) {
         CGFloat endOfTable = [self endOfTableView:scrollView];
         
-        if (_loadMoreFooterView.state == PullRefreshPulling && endOfTable < 0.0f && endOfTable > -60.0f && !_loadingInProgress) {
-			[_loadMoreFooterView setState:PullRefreshNormal];
+        if (_loadMoreFooterView.state == StatePulling && endOfTable < 0.0f && endOfTable > -60.0f && !_loadingInProgress) {
+			[_loadMoreFooterView setState:StateNormal];
             
-		} else if (_loadMoreFooterView.state == PullRefreshNormal && endOfTable < -60.0f && !_loadingInProgress) {
-			[_loadMoreFooterView setState:PullRefreshPulling];
+		} else if (_loadMoreFooterView.state == StateNormal && endOfTable < -60.0f && !_loadingInProgress) {
+			[_loadMoreFooterView setState:StatePulling];
 		}
 	}       
 }
@@ -115,17 +115,18 @@
 - (void) scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate 
 {	
     if ([self endOfTableView:scrollView] <= -60.0f && !_loadingInProgress) {
-        _loadingInProgress = YES;
         
-        // For demo purposes
-        [self performSelector:@selector(loadMoreSampleData) withObject:nil afterDelay:3.0];
-        
-        [_loadMoreFooterView setState:PullRefreshLoading];
+        // Show loading footer
+         _loadingInProgress = YES;
+        [_loadMoreFooterView setState:StateLoading];
         
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationDuration:0.2];
         self.tableView.contentInset = UIEdgeInsetsMake(0.0f, 0.0f, 55.0f, 0.0f);
         [UIView commitAnimations];
+        
+        // Load some more data into table, pretend it took 3 seconds to get it
+        [self performSelector:@selector(loadMoreSampleData) withObject:nil afterDelay:3.0];
 	}
 }
 
@@ -133,12 +134,9 @@
 
 - (void) setupLoadMoreFooterView
 {
-    CGFloat xCoord = 0.0f;
-    CGFloat yCoord = [self tableViewContentHeight];
-    CGFloat width = self.view.frame.size.width;
-    CGFloat height = 600.0f;
+    CGRect frame = CGRectMake(0.0f, [self tableViewContentHeight], self.view.frame.size.width, 600.0f);
     
-    _loadMoreFooterView = [[[PullToLoadMoreView alloc] initWithFrame:CGRectMake(xCoord, yCoord, width, height)] autorelease];
+    _loadMoreFooterView = [[[PullToLoadMoreView alloc] initWithFrame:frame] autorelease];
     _loadMoreFooterView.backgroundColor = [UIColor clearColor];
     
     [self.tableView addSubview:_loadMoreFooterView];
@@ -146,9 +144,6 @@
 
 - (void) loadMoreSampleData
 {
-    // Cancel loading footer
-    [self performSelector:@selector(dataSourceDidFinishLoadingNewData) withObject:nil];
-    
     // Add five more sample rows
     int next = _sampleDataSource.count + 1;
     
@@ -165,23 +160,17 @@
     [self.tableView reloadData];
     [self repositionLoadMoreFooterView];
     
-    // Scroll down as much as the inset of the loading footer.
-    // This keeps the table view from snapping back when loading is done and reveals 
-    // part of the newly loaded data.
-    [self.tableView setContentOffset:CGPointMake(self.tableView.contentOffset.x, self.tableView.contentOffset.y + 55.0f)];
+    // Dismiss loading footer
+    [self performSelector:@selector(didFinishLoadingMoreSampleData) withObject:nil];
 }
 
-- (void) dataSourceDidFinishLoadingNewData 
+- (void) didFinishLoadingMoreSampleData 
 {	
 	_loadingInProgress = NO;
-	
-	[UIView beginAnimations:nil context:NULL];
-	[UIView setAnimationDuration:.3];
-	[self.tableView setContentInset:UIEdgeInsetsMake(0.0f, 0.0f, 0.0f, 0.0f)];
-	[UIView commitAnimations];
+    [self.tableView setContentInset:UIEdgeInsetsMake(0.0f, 0.0f, 0.0f, 0.0f)];
 
-    if ([_loadMoreFooterView state] != PullRefreshNormal) {
-        [_loadMoreFooterView setState:PullRefreshNormal];
+    if ([_loadMoreFooterView state] != StateNormal) {
+        [_loadMoreFooterView setState:StateNormal];
     }
 }
 
